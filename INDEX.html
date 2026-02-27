@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영상작업 통합 대시보드</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.9/static/pretendard.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+  --primary: #1B2A4A;
+  --accent: #3B82F6;
+  --accent-hover: #2563EB;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --bg: #F0F2F5;
+  --card-bg: #FFFFFF;
+  --text: #1F2937;
+  --text-sub: #6B7280;
+  --border: #E5E7EB;
+  --sidebar-w: 260px;
+  --header-h: 60px;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* === SIDEBAR === */
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:var(--primary);color:#fff;z-index:100;display:flex;flex-direction:column;transition:transform .3s;}
+.sidebar-logo{padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.1);}
+.sidebar-logo h1{font-size:15px;font-weight:700;line-height:1.5;}
+.sidebar-logo span{font-size:11px;color:rgba(255,255,255,.45);display:block;margin-top:4px;}
+.sidebar-nav{flex:1;padding:12px;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:rgba(255,255,255,.65);transition:.2s;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:var(--accent);color:#fff;font-weight:600;}
+.nav-item i{width:20px;text-align:center;font-size:15px;}
+
+/* === HEADER === */
+.header{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--header-h);background:var(--card-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:90;}
+.header-left{display:flex;align-items:center;gap:14px;}
+.menu-toggle{display:none;background:none;border:none;font-size:20px;color:var(--text);cursor:pointer;}
+.header-title{font-size:16px;font-weight:600;}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.month-sel{display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:8px;padding:5px 10px;}
+.month-sel button{background:none;border:none;cursor:pointer;color:var(--text-sub);font-size:14px;padding:4px;}
+.month-sel button:hover{color:var(--accent);}
+.month-sel span{font-size:14px;font-weight:600;min-width:100px;text-align:center;}
+
+/* === MAIN === */
+.main{margin-left:var(--sidebar-w);margin-top:var(--header-h);padding:24px;min-height:calc(100vh - var(--header-h));}
+
+/* === CARDS === */
+.card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px;}
+.card-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card-title i{color:var(--accent);}
+
+/* === TABLE === */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:#F8F9FB;padding:9px 10px;text-align:left;font-weight:600;font-size:12px;color:var(--text-sub);border-bottom:2px solid var(--border);white-space:nowrap;}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr:hover{background:#F8FAFC;}
+th.center,td.center{text-align:center;}
+
+/* === BADGES === */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-complete{background:#D1FAE5;color:#065F46;}
+.badge-pending{background:#FEF3C7;color:#92400E;}
+.badge-cancel{background:#FEE2E2;color:#991B1B;}
+.b-field{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.b-세무{background:#DBEAFE;color:#1E40AF;}.b-노무{background:#FCE7F3;color:#9D174D;}.b-특허{background:#F3E8FF;color:#6B21A8;}
+.b-법률{background:#FEF3C7;color:#92400E;}.b-개인{background:#D1FAE5;color:#065F46;}.b-법인{background:#E0E7FF;color:#3730A3;}
+.b-부동산{background:#FFEDD5;color:#9A3412;}.b-정책자금{background:#CFFAFE;color:#155E75;}.b-기업인증{background:#FDE68A;color:#78350F;}
+.b-관세{background:#E9D5FF;color:#5B21B6;}.b-커뮤니케이션{background:#FBCFE8;color:#831843;}.b-비용절감{background:#A7F3D0;color:#064E3B;}
+/* Category badges */
+.cat-badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;}
+.cat-특급보고서{background:#1E40AF;color:#fff;}
+.cat-이슈브리핑{background:#D97706;color:#fff;}
+/* Gubun badges */
+.gub-법인{background:#E0E7FF;color:#3730A3;display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.gub-개인{background:#D1FAE5;color:#065F46;display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+
+/* === CHECK ICONS === */
+.chk{font-size:14px;}.chk-y{color:var(--success);}.chk-n{color:#D1D5DB;}
+
+/* === SUMMARY === */
+.summary-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.sum-item{background:var(--card-bg);padding:9px 16px;border-radius:8px;font-size:13px;box-shadow:var(--shadow);display:flex;align-items:center;gap:6px;}
+.sum-item strong{font-weight:700;font-size:16px;}
+.sum-item.a-blue strong{color:var(--accent);}.sum-item.a-green strong{color:var(--success);}
+.sum-item.a-yellow strong{color:var(--warning);}.sum-item.a-red strong{color:var(--danger);}
+.sum-item.bordered{border-left:3px solid var(--accent);padding-left:14px;}
+.sum-item.bordered-g{border-left:3px solid var(--success);padding-left:14px;}
+
+/* === FILTER === */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.f-select{padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;cursor:pointer;}
+
+/* === BOARD === */
+.board-list{list-style:none;}
+.board-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s;}
+.board-item:hover{background:#F8FAFC;}
+.board-item-field{flex-shrink:0;}
+.board-item-title{flex:1;font-size:14px;font-weight:500;}
+.board-item-date{font-size:12px;color:var(--text-sub);flex-shrink:0;}
+
+/* === MODAL === */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:200;justify-content:center;align-items:center;}
+.modal-overlay.active{display:flex;}
+.modal-content{background:#fff;border-radius:var(--radius);width:90%;max-width:600px;max-height:80vh;overflow-y:auto;padding:28px;box-shadow:var(--shadow-lg);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.modal-header h3{font-size:18px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-sub);padding:4px;}
+.modal-close:hover{color:var(--text);}
+.modal-body p{font-size:14px;line-height:1.7;white-space:pre-wrap;}
+.modal-meta{display:flex;gap:12px;margin-bottom:14px;font-size:13px;color:var(--text-sub);}
+
+/* === CONTENT CARDS (게시예정) === */
+.content-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;}
+.c-card{background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:16px;border-left:4px solid var(--accent);transition:transform .15s,box-shadow .15s;}
+.c-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+.c-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.c-card-date{font-size:12px;color:var(--text-sub);font-weight:600;}
+.c-card-title{font-size:14px;font-weight:600;margin-bottom:10px;line-height:1.4;}
+.c-card-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.c-card-meta span{font-size:11px;color:var(--text-sub);}
+.c-card-checks{display:flex;gap:12px;font-size:11px;color:var(--text-sub);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;}
+.c-card-checks .ci{display:flex;align-items:center;gap:3px;}
+.c-card.border-특급보고서{border-left-color:#1E40AF;}
+.c-card.border-이슈브리핑{border-left-color:#D97706;}
+
+.view-toggle{display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px;}
+.vt-btn{padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:transparent;color:var(--text-sub);transition:.2s;}
+.vt-btn.active{background:var(--accent);color:#fff;}
+
+/* === SECTION === */
+.section{display:none;}.section.active{display:block;}
+
+/* === SETTINGS === */
+.settings-panel{display:none;position:fixed;top:0;right:0;width:420px;max-width:100vw;height:100vh;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.1);z-index:200;padding:24px;overflow-y:auto;}
+.settings-panel.active{display:block;}
+.settings-panel h3{font-size:16px;font-weight:700;margin-bottom:20px;}
+.s-group{margin-bottom:18px;}
+.s-group label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:var(--text-sub);}
+.s-group input,.s-group textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;}
+.s-group small{font-size:11px;color:var(--text-sub);display:block;margin-top:3px;}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent-hover);}
+.btn-secondary{background:var(--bg);color:var(--text);}.btn-secondary:hover{background:var(--border);}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.settings-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:190;}
+.settings-overlay.active{display:block;}
+.conn-status{display:flex;align-items:center;gap:5px;font-size:11px;padding:5px 10px;border-radius:6px;}
+.conn-status.ok{background:#D1FAE5;color:#065F46;}
+.conn-status.fail{background:#FEE2E2;color:#991B1B;}
+.conn-dot{width:6px;height:6px;border-radius:50%;}
+.ok .conn-dot{background:#10B981;}.fail .conn-dot{background:#EF4444;}
+a.url-link{color:var(--accent);text-decoration:none;font-size:12px;}a.url-link:hover{text-decoration:underline;}
+.empty-state{text-align:center;padding:50px 20px;color:var(--text-sub);}
+.empty-state i{font-size:36px;margin-bottom:10px;opacity:.3;}
+.empty-state p{font-size:14px;}
+.sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:99;}
+.sidebar-overlay.active{display:block;}
+.tab-group{display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px;margin-bottom:14px;}
+.tab-btn{padding:7px 16px;border:none;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--text-sub);transition:.2s;}
+.tab-btn.active{background:var(--accent);color:#fff;}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}
+  .header{left:0;padding:0 14px;}.main{margin-left:0;padding:14px;}
+  .menu-toggle{display:block;}.content-grid{grid-template-columns:1fr;}
+  .settings-panel{width:100%;}table{font-size:12px;}thead th,tbody td{padding:7px 6px;}
+  .summary-row{gap:6px;}.sum-item{padding:7px 10px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <h1>영상작업 통합 대시보드<br>관리 시스템</h1>
+    <span>Video Production Dashboard</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" data-section="schedule" onclick="go('schedule')"><i class="fas fa-calendar-alt"></i> 게시예정 콘텐츠</div>
+    <div class="nav-item" data-section="filming" onclick="go('filming')"><i class="fas fa-video"></i> 월간 영상준비현황</div>
+    <div class="nav-item" data-section="editing" onclick="go('editing')"><i class="fas fa-film"></i> 월간 편집현황</div>
+    <div class="nav-item" data-section="upload" onclick="go('upload')"><i class="fas fa-upload"></i> 영상 업로드현황</div>
+    <div class="nav-item" data-section="board" onclick="go('board')"><i class="fas fa-clipboard-list"></i> 영상업무관련게시판</div>
+  </nav>
+</aside>
+
+<header class="header">
+  <div class="header-left">
+    <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+    <span class="header-title" id="headerTitle">게시예정 콘텐츠</span>
+  </div>
+  <div class="header-right">
+    <div class="month-sel">
+      <button onclick="chgMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+      <span id="monthDisp">2026년 3월</span>
+      <button onclick="chgMonth(1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div class="conn-status fail" id="connSt"><div class="conn-dot"></div><span>미연결</span></div>
+    <button class="btn btn-sm btn-secondary" onclick="openSettings()"><i class="fas fa-cog"></i> 설정</button>
+  </div>
+</header>
+
+<main class="main">
+
+<!-- ========== 1. 게시예정 콘텐츠 ========== -->
+<div class="section active" id="sec-schedule">
+  <div class="summary-row" id="schSum"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+    <div class="filter-bar" style="margin-bottom:0;">
+      <select class="f-select" id="schCatF" onchange="renderSchedule()">
+        <option value="all">전체 카테고리</option>
+        <option value="특급보고서">특급보고서</option>
+        <option value="이슈브리핑">이슈브리핑</option>
+      </select>
+      <select class="f-select" id="schGubF" onchange="renderSchedule()">
+        <option value="all">전체 구분</option>
+        <option value="법인">법인</option>
+        <option value="개인">개인</option>
+      </select>
+    </div>
+    <div class="view-toggle">
+      <button class="vt-btn active" data-view="card" onclick="schView('card')"><i class="fas fa-th-large"></i> 카드</button>
+      <button class="vt-btn" data-view="list" onclick="schView('list')"><i class="fas fa-list"></i> 리스트</button>
+    </div>
+  </div>
+  <div id="schCardWrap"><div class="content-grid" id="schCards"></div></div>
+  <div id="schListWrap" style="display:none;">
+    <div class="card" style="padding:0 0 8px 0;">
+      <div class="table-wrap"><table><thead><tr>
+        <th>게시예정일</th><th>카테고리</th><th>구분</th><th>제목</th><th class="center">영상</th><th class="center">오디오</th><th class="center">HTML</th><th class="center">PDF</th><th class="center">PPT</th><th class="center">게시완료</th>
+      </tr></thead><tbody id="schTbl"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 2. 월간 영상준비현황 ========== -->
+<div class="section" id="sec-filming">
+  <div class="summary-row" id="filmSum"></div>
+  <div class="filter-bar">
+    <select class="f-select" id="filmFieldF" onchange="renderFilming()"><option value="all">전체 분야</option></select>
+    <select class="f-select" id="filmGubF" onchange="renderFilming()"><option value="all">전체 구분</option><option value="법인">법인</option><option value="개인">개인</option></select>
+  </div>
+  <div class="card"><div class="card-title"><i class="fas fa-video"></i> 월간 영상준비현황</div>
+    <div class="table-wrap"><table><thead><tr>
+      <th>영상확보예정일</th><th>분야</th><th>구분</th><th>전문가</th><th>영상 제목</th><th>준비상태</th><th>영상업로드일</th><th>비고</th>
+    </tr></thead><tbody id="filmTbl"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ========== 3. 월간 편집현황 ========== -->
+<div class="section" id="sec-editing">
+  <div class="summary-row" id="editSum"></div>
+  <div class="filter-bar">
+    <select class="f-select" id="editFieldF" onchange="renderEditing()"><option value="all">전체 분야</option></select>
+    <select class="f-select" id="editGubF" onchange="renderEditing()"><option value="all">전체 구분</option><option value="법인">법인</option><option value="개인">개인</option></select>
+  </div>
+  <div class="card"><div class="card-title"><i class="fas fa-film"></i> 월간 편집현황</div>
+    <div class="table-wrap"><table><thead><tr>
+      <th>영상확보일</th><th>분야</th><th>구분</th><th>전문가</th><th>영상 제목</th><th>편집완료일</th><th>영상업로드일</th><th>비고</th>
+    </tr></thead><tbody id="editTbl"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ========== 4. 영상 업로드현황 ========== -->
+<div class="section" id="sec-upload">
+  <div class="summary-row" id="uplSum"></div>
+  <div class="filter-bar">
+    <select class="f-select" id="uplFieldF" onchange="renderUpload()"><option value="all">전체 분야</option></select>
+    <select class="f-select" id="uplGubF" onchange="renderUpload()"><option value="all">전체 구분</option><option value="법인">법인</option><option value="개인">개인</option></select>
+  </div>
+  <div class="card"><div class="card-title"><i class="fas fa-upload"></i> 당월 영상 업로드 현황</div>
+    <div class="table-wrap"><table><thead><tr>
+      <th>업로드일</th><th>영상확보일</th><th>분야</th><th>구분</th><th>주제</th><th>전문가</th><th>소속</th><th>업로드사이트</th><th>URL</th>
+    </tr></thead><tbody id="uplTbl"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ========== 5. 영상업무관련게시판 ========== -->
+<div class="section" id="sec-board">
+  <div class="card"><div class="card-title"><i class="fas fa-clipboard-list"></i> 영상업무관련게시판</div>
+    <ul class="board-list" id="boardList"><li class="empty-state"><i class="fas fa-inbox"></i><p>게시글이 없습니다.</p></li></ul>
+  </div>
+</div>
+
+</main>
+
+<!-- Board Modal -->
+<div class="modal-overlay" id="boardModal">
+  <div class="modal-content">
+    <div class="modal-header"><h3 id="mTitle"></h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-meta"><span id="mField"></span><span id="mDate"></span></div>
+    <div class="modal-body"><p id="mContent"></p></div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div class="settings-overlay" id="setOverlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="setPanel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <h3 style="margin:0;">⚙️ 설정</h3>
+    <button class="modal-close" onclick="closeSettings()">&times;</button>
+  </div>
+
+  <div class="s-group"><label>Google Sheets API 키</label><input type="text" id="cfgApiKey" placeholder="AIzaSy..."></div>
+  <div class="s-group"><label>스프레드시트 ID</label><input type="text" id="cfgSheetId" placeholder="URL의 /d/ 와 /edit 사이 문자열"><small>시트 URL: https://docs.google.com/spreadsheets/d/<b>여기</b>/edit</small></div>
+  <div class="s-group"><label>시트 탭 이름 (기본값 권장)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+      <input type="text" id="snSchedule" value="게시예정콘텐츠" placeholder="게시예정콘텐츠">
+      <input type="text" id="snFilming" value="영상준비현황" placeholder="영상준비현황">
+      <input type="text" id="snEditing" value="편집현황" placeholder="편집현황">
+      <input type="text" id="snUpload" value="업로드현황" placeholder="업로드현황">
+      <input type="text" id="snBoard" value="게시판" placeholder="게시판">
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:16px;">
+    <button class="btn btn-primary" onclick="saveSettings()">저장 및 연결</button>
+    <button class="btn btn-secondary" onclick="closeSettings()">취소</button>
+  </div>
+
+  <div style="margin-top:20px;padding:14px;background:var(--bg);border-radius:8px;">
+    <p style="font-size:12px;color:var(--text-sub);line-height:1.6;">
+      <strong>📌 연결 방법 (3단계):</strong><br>
+      ① Google Cloud Console에서 API 키 생성<br>
+      ② Google Sheets API 활성화<br>
+      ③ 스프레드시트를 "링크가 있는 모든 사용자" 공개<br><br>
+      자세한 방법은 함께 제공된 가이드를 참고하세요.
+    </p>
+  </div>
+</div>
+
+<script>
+// ============================================
+// STATE
+// ============================================
+let curDate = new Date(2026, 2, 1); // March 2026
+let curSec = 'schedule';
+let schViewMode = 'card';
+
+let cfg = {
+  apiKey: '', sheetId: '',
+  sheetNames: { schedule:'게시예정콘텐츠', filming:'영상준비현황', editing:'편집현황', upload:'업로드현황', board:'게시판' }
+};
+
+let D = { schedule:[], filming:[], editing:[], upload:[], board:[] };
+
+// ============================================
+// INIT
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  loadCfg();
+  updMonth();
+  if (cfg.apiKey && cfg.sheetId) { fetchAll(); }
+  else { loadDemo(); renderAll(); }
+});
+
+// ============================================
+// CONFIG
+// ============================================
+function loadCfg() {
+  const s = localStorage.getItem('vdashCfg3');
+  if (s) { cfg = JSON.parse(s); }
+  document.getElementById('cfgApiKey').value = cfg.apiKey||'';
+  document.getElementById('cfgSheetId').value = cfg.sheetId||'';
+  document.getElementById('snSchedule').value = cfg.sheetNames?.schedule||'게시예정콘텐츠';
+  document.getElementById('snFilming').value = cfg.sheetNames?.filming||'영상준비현황';
+  document.getElementById('snEditing').value = cfg.sheetNames?.editing||'편집현황';
+  document.getElementById('snUpload').value = cfg.sheetNames?.upload||'업로드현황';
+  document.getElementById('snBoard').value = cfg.sheetNames?.board||'게시판';
+}
+
+function saveSettings() {
+  cfg.apiKey = document.getElementById('cfgApiKey').value.trim();
+  cfg.sheetId = document.getElementById('cfgSheetId').value.trim();
+  cfg.sheetNames = {
+    schedule: document.getElementById('snSchedule').value.trim()||'게시예정콘텐츠',
+    filming: document.getElementById('snFilming').value.trim()||'영상준비현황',
+    editing: document.getElementById('snEditing').value.trim()||'편집현황',
+    upload: document.getElementById('snUpload').value.trim()||'업로드현황',
+    board: document.getElementById('snBoard').value.trim()||'게시판'
+  };
+  localStorage.setItem('vdashCfg3', JSON.stringify(cfg));
+  closeSettings();
+  fetchAll();
+}
+
+function openSettings(){document.getElementById('setPanel').classList.add('active');document.getElementById('setOverlay').classList.add('active');}
+function closeSettings(){document.getElementById('setPanel').classList.remove('active');document.getElementById('setOverlay').classList.remove('active');}
+
+// ============================================
+// NAV
+// ============================================
+const titles = {schedule:'게시예정 콘텐츠',filming:'월간 영상준비현황',editing:'월간 편집현황',upload:'영상 업로드현황',board:'영상업무관련게시판'};
+function go(id){
+  curSec=id;
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelector(`[data-section="${id}"]`).classList.add('active');
+  document.getElementById('headerTitle').textContent=titles[id];
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+  render(id);
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('active');}
+
+// ============================================
+// MONTH
+// ============================================
+function chgMonth(d){curDate.setMonth(curDate.getMonth()+d);updMonth();renderAll();}
+function updMonth(){document.getElementById('monthDisp').textContent=`${curDate.getFullYear()}년 ${curDate.getMonth()+1}월`;}
+function ym(){return{y:curDate.getFullYear(),m:curDate.getMonth()};}
+
+// ============================================
+// UTIL
+// ============================================
+function fmtDate(s){if(!s)return'-';const d=new Date(s);if(isNaN(d))return s;return`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;}
+function dayName(s){if(!s)return'';const d=new Date(s);if(isNaN(d))return'';return['일','월','화','수','목','금','토'][d.getDay()];}
+function inMonth(s,y,m){if(!s)return false;const d=new Date(s);return!isNaN(d)&&d.getFullYear()===y&&d.getMonth()===m;}
+function inYear(s,y){if(!s)return false;const d=new Date(s);return!isNaN(d)&&d.getFullYear()===y;}
+function chkIcon(v){return v?'<i class="fas fa-check chk chk-y"></i>':'<i class="fas fa-minus chk chk-n"></i>';}
+function catBadge(c){if(!c)return'';return`<span class="cat-badge cat-${c}">${c}</span>`;}
+function gubBadge(g){if(!g)return'-';return`<span class="gub-${g}">${g}</span>`;}
+function fieldBadge(f){if(!f)return'';return`<span class="b-field b-${f}">${f}</span>`;}
+function statusBadge(s){if(!s)return'';if(s==='완료')return'<span class="badge badge-complete">완료</span>';if(s==='예정')return'<span class="badge badge-pending">예정</span>';if(s==='취소')return'<span class="badge badge-cancel">취소</span>';return`<span class="badge">${s}</span>`;}
+function popFieldFilter(selId,arr,key){const el=document.getElementById(selId);const cv=el.value;const fs=[...new Set(arr.map(r=>r[key]).filter(Boolean))].sort();el.innerHTML='<option value="all">전체 분야</option>'+fs.map(f=>`<option value="${f}">${f}</option>`).join('');el.value=fs.includes(cv)?cv:'all';}
+function applyFilter(rows,fId,gId,fk,gk){const fv=document.getElementById(fId).value;const gv=document.getElementById(gId).value;return rows.filter(r=>(fv==='all'||r[fk]===fv)&&(gv==='all'||r[gk]===gv));}
+
+// ============================================
+// DATA FETCH
+// ============================================
+async function fetchSheet(name){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/${encodeURIComponent(name)}?key=${cfg.apiKey}`;
+  try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);const j=await r.json();return j.values||[];}catch(e){console.error(name,e);return[];}
+}
+function parseSheet(v){if(!v||v.length<2)return[];const h=v[0];return v.slice(1).map(r=>{const o={};h.forEach((k,i)=>{o[k]=r[i]||'';});return o;});}
+
+async function fetchAll(){
+  const st=document.getElementById('connSt');
+  try{
+    const [sv,fv,ev,uv,bv]=await Promise.all([
+      fetchSheet(cfg.sheetNames.schedule),
+      fetchSheet(cfg.sheetNames.filming),
+      fetchSheet(cfg.sheetNames.editing),
+      fetchSheet(cfg.sheetNames.upload),
+      fetchSheet(cfg.sheetNames.board)
+    ]);
+    D.schedule=parseSheet(sv).map(r=>({...r,'영상':r['영상']==='Y'||r['영상']==='✓','오디오':r['오디오']==='Y'||r['오디오']==='✓','HTML':r['HTML']==='Y'||r['HTML']==='✓','PDF':r['PDF']==='Y'||r['PDF']==='✓','PPT':r['PPT']==='Y'||r['PPT']==='✓','게시완료':r['게시완료']==='Y'||r['게시완료']==='✓'}));
+    D.filming=parseSheet(fv);
+    D.editing=parseSheet(ev);
+    D.upload=parseSheet(uv);
+    D.board=parseSheet(bv);
+    st.className='conn-status ok';st.innerHTML='<div class="conn-dot"></div><span>연결됨</span>';
+    renderAll();
+  }catch(e){
+    console.error(e);
+    st.className='conn-status fail';st.innerHTML='<div class="conn-dot"></div><span>연결 실패</span>';
+  }
+}
+
+// ============================================
+// RENDER
+// ============================================
+function renderAll(){render(curSec);}
+function render(id){
+  switch(id){
+    case'schedule':renderSchedule();break;case'filming':renderFilming();break;
+    case'editing':renderEditing();break;case'upload':renderUpload();break;case'board':renderBoard();break;
+  }
+}
+
+// --- 1. 게시예정 콘텐츠 ---
+function schView(m){
+  schViewMode=m;
+  document.querySelectorAll('.vt-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.vt-btn[data-view="${m}"]`).classList.add('active');
+  document.getElementById('schCardWrap').style.display=m==='card'?'block':'none';
+  document.getElementById('schListWrap').style.display=m==='list'?'block':'none';
+  renderSchedule();
+}
+
+function renderSchedule(){
+  const{y,m}=ym();
+  let rows=D.schedule.filter(r=>inMonth(r['게시예정일'],y,m)).sort((a,b)=>(a['게시예정일']||'').localeCompare(b['게시예정일']||''));
+  const total=rows.length;
+  const published=rows.filter(r=>r['게시완료']).length;
+
+  // Filter
+  const catV=document.getElementById('schCatF').value;
+  const gubV=document.getElementById('schGubF').value;
+  if(catV!=='all')rows=rows.filter(r=>r['카테고리']===catV);
+  if(gubV!=='all')rows=rows.filter(r=>r['구분']===gubV);
+
+  document.getElementById('schSum').innerHTML=`
+    <div class="sum-item a-blue">총 편성 <strong>${total}</strong>건</div>
+    <div class="sum-item a-green">게시완료 <strong>${published}</strong>건</div>
+    <div class="sum-item a-red">게시전 <strong>${total-published}</strong>건</div>
+    <div class="sum-item">현재 표시 <strong>${rows.length}</strong>건</div>
+  `;
+
+  // Cards
+  const cc=document.getElementById('schCards');
+  if(!rows.length){cc.innerHTML='<div class="empty-state"><i class="fas fa-calendar-times"></i><p>해당 월 게시예정 콘텐츠가 없습니다.</p></div>';}
+  else{cc.innerHTML=rows.map(r=>{
+    const dn=dayName(r['게시예정일']);
+    const dc=new Date(r['게시예정일']).getDay();
+    const dayC=dc===1?'day-mon':dc===3?'day-wed':dc===5?'day-fri':'';
+    return`<div class="c-card border-${r['카테고리']||''}">
+      <div class="c-card-top">
+        <span class="c-card-date">${fmtDate(r['게시예정일'])} <span class="day-badge ${dayC}" style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;">${dn}</span></span>
+        ${catBadge(r['카테고리'])}
+      </div>
+      <div class="c-card-title">${r['제목']||'-'}</div>
+      <div class="c-card-meta">${gubBadge(r['구분'])}</div>
+      <div class="c-card-checks">
+        <span class="ci">${chkIcon(r['영상'])} 영상</span>
+        <span class="ci">${chkIcon(r['오디오'])} 오디오</span>
+        <span class="ci">${chkIcon(r['HTML'])} HTML</span>
+        <span class="ci">${chkIcon(r['PDF'])} PDF</span>
+        <span class="ci">${chkIcon(r['PPT'])} PPT</span>
+        <span class="ci" style="font-weight:600;${r['게시완료']?'color:var(--success)':'color:var(--danger)'}">${r['게시완료']?'<i class="fas fa-check chk chk-y"></i> 게시완료':'<i class="fas fa-clock chk chk-n"></i> 게시전'}</span>
+      </div>
+    </div>`; }).join('');}
+
+  // Table
+  const tb=document.getElementById('schTbl');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="10" class="empty-state"><p>데이터 없음</p></td></tr>';}
+  else{tb.innerHTML=rows.map(r=>`<tr>
+    <td>${fmtDate(r['게시예정일'])}</td><td>${catBadge(r['카테고리'])}</td><td>${gubBadge(r['구분'])}</td>
+    <td>${r['제목']||'-'}</td>
+    <td class="center">${chkIcon(r['영상'])}</td><td class="center">${chkIcon(r['오디오'])}</td>
+    <td class="center">${chkIcon(r['HTML'])}</td><td class="center">${chkIcon(r['PDF'])}</td>
+    <td class="center">${chkIcon(r['PPT'])}</td>
+    <td class="center">${r['게시완료']?'<span class="badge badge-complete">게시완료</span>':'<span class="badge badge-cancel">게시전</span>'}</td>
+  </tr>`).join('');}
+}
+
+// --- 2. 월간 영상준비현황 ---
+function renderFilming(){
+  const{y,m}=ym();
+  popFieldFilter('filmFieldF',D.filming,'분야');
+  const all=D.filming.filter(r=>inMonth(r['영상확보예정일'],y,m));
+  let rows=applyFilter([...all].sort((a,b)=>(a['영상확보예정일']||'').localeCompare(b['영상확보예정일']||'')),'filmFieldF','filmGubF','분야','구분');
+  const done=all.filter(r=>r['준비상태']==='완료').length;
+  const pend=all.filter(r=>r['준비상태']==='예정').length;
+  const yrDone=D.filming.filter(r=>inYear(r['영상확보예정일'],y)&&r['준비상태']==='완료').length;
+
+  document.getElementById('filmSum').innerHTML=`
+    <div class="sum-item a-blue">당월 합계 <strong>${all.length}</strong>건</div>
+    <div class="sum-item a-green">완료 <strong>${done}</strong>건</div>
+    <div class="sum-item a-yellow">예정 <strong>${pend}</strong>건</div>
+    <div class="sum-item bordered">당월 준비완료영상계 <strong>${done}</strong></div>
+    <div class="sum-item bordered-g">연간 준비완료영상계 <strong>${yrDone}</strong></div>
+  `;
+  const tb=document.getElementById('filmTbl');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="8" class="empty-state"><p>데이터 없음</p></td></tr>';}
+  else{tb.innerHTML=rows.map(r=>`<tr>
+    <td>${fmtDate(r['영상확보예정일'])}</td><td>${fieldBadge(r['분야'])}</td><td>${gubBadge(r['구분'])}</td>
+    <td>${r['전문가']||'-'}</td><td>${r['영상제목']||'-'}</td><td>${statusBadge(r['준비상태'])}</td>
+    <td>${fmtDate(r['영상업로드일'])}</td><td>${r['비고']||''}</td>
+  </tr>`).join('');}
+}
+
+// --- 3. 월간 편집현황 ---
+function renderEditing(){
+  const{y,m}=ym();
+  const fc=D.filming.filter(r=>r['준비상태']==='완료'&&inMonth(r['영상확보예정일'],y,m));
+  const eMap={};D.editing.forEach(r=>{eMap[`${r['영상확보일']}_${r['전문가']}_${r['영상제목']}`]=r;});
+  let rows=fc.map(f=>{
+    const k=`${f['영상확보예정일']}_${f['전문가']}_${f['영상제목']}`;const e=eMap[k];
+    return{'영상확보일':f['영상확보예정일'],'분야':f['분야'],'구분':f['구분']||'','전문가':f['전문가'],'영상제목':f['영상제목'],'편집완료일':e?e['편집완료일']:'','영상업로드일':e?e['영상업로드일']:f['영상업로드일'],'비고':e?e['비고']:f['비고']};
+  });
+  D.editing.filter(r=>inMonth(r['영상확보일'],y,m)).forEach(r=>{
+    if(!rows.find(x=>x['영상확보일']===r['영상확보일']&&x['전문가']===r['전문가']&&x['영상제목']===r['영상제목']))rows.push(r);
+  });
+  rows.sort((a,b)=>(a['영상확보일']||'').localeCompare(b['영상확보일']||''));
+  popFieldFilter('editFieldF',rows,'분야');
+  const filtered=applyFilter(rows,'editFieldF','editGubF','분야','구분');
+  const total=rows.length;const edDone=rows.filter(r=>r['편집완료일']).length;
+  // 연간 완성영상계
+  const allYrFilm=D.filming.filter(r=>r['준비상태']==='완료'&&inYear(r['영상확보예정일'],y));
+  let yrEdDone=0;
+  allYrFilm.forEach(f=>{const k=`${f['영상확보예정일']}_${f['전문가']}_${f['영상제목']}`;if(eMap[k]&&eMap[k]['편집완료일'])yrEdDone++;});
+  D.editing.filter(r=>inYear(r['영상확보일'],y)&&r['편집완료일']).forEach(r=>{
+    if(!allYrFilm.find(f=>`${f['영상확보예정일']}_${f['전문가']}_${f['영상제목']}`===`${r['영상확보일']}_${r['전문가']}_${r['영상제목']}`))yrEdDone++;
+  });
+
+  document.getElementById('editSum').innerHTML=`
+    <div class="sum-item a-blue">편집대상 <strong>${total}</strong>건</div>
+    <div class="sum-item a-green">편집완료 <strong>${edDone}</strong>건</div>
+    <div class="sum-item a-yellow">편집대기 <strong>${total-edDone}</strong>건</div>
+    <div class="sum-item bordered">당월 완성영상계 <strong>${edDone}</strong></div>
+    <div class="sum-item bordered-g">연간 완성영상계 <strong>${yrEdDone}</strong></div>
+  `;
+  const tb=document.getElementById('editTbl');
+  if(!filtered.length){tb.innerHTML='<tr><td colspan="8" class="empty-state"><p>데이터 없음</p></td></tr>';}
+  else{tb.innerHTML=filtered.map(r=>`<tr>
+    <td>${fmtDate(r['영상확보일'])}</td><td>${fieldBadge(r['분야'])}</td><td>${gubBadge(r['구분'])}</td>
+    <td>${r['전문가']||'-'}</td><td>${r['영상제목']||'-'}</td>
+    <td>${r['편집완료일']?fmtDate(r['편집완료일']):'<span class="badge badge-pending">대기</span>'}</td>
+    <td>${fmtDate(r['영상업로드일'])}</td><td>${r['비고']||''}</td>
+  </tr>`).join('');}
+}
+
+// --- 4. 영상 업로드현황 ---
+function renderUpload(){
+  const{y,m}=ym();
+  const all=D.upload.filter(r=>inMonth(r['업로드일'],y,m));
+  popFieldFilter('uplFieldF',D.upload,'분야');
+  let rows=applyFilter([...all].sort((a,b)=>(a['업로드일']||'').localeCompare(b['업로드일']||'')),'uplFieldF','uplGubF','분야','구분');
+  const yrTotal=D.upload.filter(r=>inYear(r['업로드일'],y)).length;
+
+  document.getElementById('uplSum').innerHTML=`
+    <div class="sum-item a-blue">당월 총계 <strong>${all.length}</strong>건</div>
+    <div class="sum-item bordered-g">연간 총계 <strong>${yrTotal}</strong>건</div>
+    <div class="sum-item">현재 표시 <strong>${rows.length}</strong>건</div>
+  `;
+  const tb=document.getElementById('uplTbl');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="9" class="empty-state"><p>데이터 없음</p></td></tr>';}
+  else{tb.innerHTML=rows.map(r=>`<tr>
+    <td>${fmtDate(r['업로드일'])}</td><td>${fmtDate(r['영상확보일'])}</td><td>${fieldBadge(r['분야'])}</td>
+    <td>${gubBadge(r['구분'])}</td><td>${r['주제']||'-'}</td><td>${r['전문가']||'-'}</td><td>${r['소속']||'-'}</td>
+    <td>${r['업로드사이트']||'-'}</td>
+    <td>${r['URL']?`<a class="url-link" href="${r['URL']}" target="_blank">🔗 링크</a>`:'-'}</td>
+  </tr>`).join('');}
+}
+
+// --- 5. 게시판 ---
+function renderBoard(){
+  const rows=D.board.sort((a,b)=>(b['게시일']||'').localeCompare(a['게시일']||''));
+  const list=document.getElementById('boardList');
+  if(!rows.length){list.innerHTML='<li class="empty-state"><i class="fas fa-inbox"></i><p>게시글이 없습니다.</p></li>';return;}
+  list.innerHTML=rows.map((r,i)=>`
+    <li class="board-item" onclick="openBoard(${i})">
+      <div class="board-item-field"><span class="b-field" style="background:#F3F4F6;color:#374151;">${r['분야']||'기타'}</span></div>
+      <div class="board-item-title">${r['제목']||'(제목 없음)'}</div>
+      <div class="board-item-date">${fmtDate(r['게시일'])}</div>
+    </li>`).join('');
+}
+
+function openBoard(i){
+  const rows=D.board.sort((a,b)=>(b['게시일']||'').localeCompare(a['게시일']||''));
+  const r=rows[i];if(!r)return;
+  document.getElementById('mTitle').textContent=r['제목']||'';
+  document.getElementById('mField').innerHTML=`<span class="b-field" style="background:#F3F4F6;color:#374151;">${r['분야']||'기타'}</span>`;
+  document.getElementById('mDate').textContent=fmtDate(r['게시일']);
+  document.getElementById('mContent').textContent=r['내용']||'';
+  document.getElementById('boardModal').classList.add('active');
+}
+function closeModal(){document.getElementById('boardModal').classList.remove('active');}
+document.getElementById('boardModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+// ============================================
+// DEMO DATA (JARVIA 3월 기준)
+// ============================================
+function loadDemo(){
+  // Google Sheets 연결 전에는 모든 메뉴가 빈 상태로 표시됩니다.
+  // 설정에서 Google Sheets API 키와 스프레드시트 ID를 입력하면 데이터가 표시됩니다.
+  D.schedule=[];
+  D.filming=[];
+  D.editing=[];
+  D.upload=[];
+  D.board=[];
+}
+</script>
+</body>
+</html>
